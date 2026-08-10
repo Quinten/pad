@@ -1,0 +1,161 @@
+body, html {
+    background-color: #333;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+* {
+    border: 0;
+    border-radius: 0;
+    box-sizing: border-box;
+    color: #eee;
+    font-family: monospace;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+*:focus {
+    outline: none;
+}
+
+img, svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* navigation */
+
+nav {
+    background-color: #333;
+    padding: 0.5rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3.5rem;
+    z-index: 100;
+}
+
+button, input {
+    background-color: #000;
+    cursor: pointer;
+    padding: .5em;
+    min-width: 40px;
+    text-align: center;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+button:hover, button:focus, button:active,
+input:hover, input:focus, input:active {
+    background-color: #222;
+}
+
+input[type="color"] {
+    inline-size: 40px;
+    block-size: 40px;
+    padding: 0;
+    padding-inline: 0;
+    padding-block: 0;
+}
+
+.version {
+    padding: .5em 1em;
+    float: right;
+    color: #000;
+}
+
+/* view */
+
+.view {
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+.inner-view {
+    overflow-y: auto;
+    position: fixed;
+    top: 3.5rem;    
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+/* list view */
+
+.list-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, clamp(64px, 240px, calc(50% - 0.25rem)));
+    grid-gap: 0.5rem;
+}
+
+.list-view img {
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJ0lEQVQoU2N89+7dfwYkICgoiMxlYKSDgv///6O44f3796huoL0CAPpyKx1ry0n4AAAAAElFTkSuQmCC') repeat top left;
+}
+
+/* editor */
+
+.custom-touch {
+    touch-action: none;
+    user-select: none;
+    overflow: hidden;
+}
+
+.custom-touch-inner {
+    position: absolute;
+}
+
+.custom-touch-inner {
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJ0lEQVQoU2N89+7dfwYkICgoiMxlYKSDgv///6O44f3796huoL0CAPpyKx1ry0n4AAAAAElFTkSuQmCC') repeat top left;
+}
+
+.touch-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+@keyframes dash {
+    0% {
+        stroke-dashoffset: 0;
+        stroke: #0ff;
+    }
+    50% {
+        stroke-dashoffset: 12;
+        stroke: #f0f;
+    }
+    100% {
+        stroke-dashoffset: 24;
+        stroke: #0ff;
+    }
+}
+
+#svgcursors svg * {
+    fill: none !important;
+    stroke: #0ff;
+    stroke-dashoffset: 0;
+    stroke-width: 2;
+    stroke-dasharray: 12;
+    vector-effect: non-scaling-stroke;
+    animation: dash 2s linear infinite;
+}
+
+/* code editor */
+
+textarea {
+    background-color: #222;
+    display: block;
+    padding: .5em 1em;
+    resize: none;
+    width: 100%;
+    height: 100%;
+}

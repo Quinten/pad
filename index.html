@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>pad</title>
+        <meta name="description" content="svg vector drawing tool">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <link href="style.css?v1.0.21" rel="stylesheet" type="text/css">
+    </head>
+    <body>
+        <div class="view" id="gallery">
+            <nav>
+                <button onclick="newSvg()">new</button>
+                <button onclick="importSvg()">imp</button>
+                <span class="version">v1.0.21</span>
+            </nav>
+            <div class="inner-view">
+                <div id="list" class="list-view"></div>
+            </div>
+        </div>
+        <div class="view" id="editor" style="display: none;">
+            <nav class="toolbar" id="svgtools">
+                <button onclick="openGallery()">all</button>
+                <button onclick="exportSvg()">exp</button>
+                <button onclick="openSource()">src</button>
+            </nav>
+            <nav class="toolbar" id="pathtools" style="display: none;">
+                <button onclick="lowerElements()" title="Lower selected elements">\/</button>
+                <button onclick="raiseElements()" title="Raise selected elements">/\</button>
+                <input oninput="fillElements()" type="color" id="fillcolor" title="Fill"
+                value="#ffffff" />
+                <input oninput="strokeElements()" type="color" id="strokecolor" title="Stroke"
+                value="#000000" />
+                <input oninput="strokeElements()" type="number" id="strokewidth" title="Stroke width"
+                value="1" min="0" max="99" step="1" inputmode="numeric" pattern="[0-9]*" />
+                <input oninput="updateRounding()" type="number" id="rounding" title="Rounding"
+                value="32" min="0" max="128" step="1" inputmode="numeric" pattern="[0-9]*" />
+                <button onclick="removeElements()" title="Remove selected elements">X!</button>
+            </nav>
+            <div class="inner-view custom-touch">
+                <div class="custom-touch-inner">
+                    <div id="svgcursors" class="touch-svg">
+                        <svg
+                            version="1.1" xmlns="http://www.w3.org/2000/svg"
+                            width="1024" height="1024" viewBox="0 0 1024 1024">
+                        </svg>
+                    </div>
+                    <div id="svgimg" class="img-svg"></div>
+                </div>
+            </div>
+        </div>
+        <div class="view" id="source" style="display: none;">
+            <nav>
+                <button onclick="applySource()">save</button>
+                <button onclick="discardSource()">cancel</button>
+            </nav>
+            <div class="inner-view">
+                <textarea id="svgcode"></textarea>
+            </div> 
+        </div>
+        <script src="index.js?v1.0.21" type="module"></script>
+    </body>
+</html>
