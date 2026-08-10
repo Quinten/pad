@@ -149,6 +149,16 @@ input[type="color"] {
     animation: dash 2s linear infinite;
 }
 
+/* control handles: override the default cursor overlay styles so handles are visible */
+#svgcursors svg .bend-handle circle,
+#svgcursors svg .q-control-handle circle {
+    fill: #0ff !important;
+}
+
+#svgcursors svg .endpoint-handle circle {
+    fill: #f0f !important;
+}
+
 /* code editor */
 
 textarea {

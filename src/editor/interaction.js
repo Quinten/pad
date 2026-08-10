@@ -2,6 +2,13 @@ import { selectedElements } from './state.js';
 import { selectElement, redrawCursors, deselectAllElements, fillElements, strokeElements } from './selection.js';
 import { drawGridDots } from '../ui/dom.js';
 import { getRounding } from './state.js';
+import { findClosestNode, findClosestSegment, convertSegmentToQuadratic, updateControlPoint, updateEndpoint, finalizeQuadraticIfStraight, normalizePathEndpoints } from './paths.js';
+
+// single shared currentNode for interaction (sufficient for single editor)
+let currentNode = undefined;
+export function beginDragNode(node) {
+    currentNode = node;
+}
 
 export function initInteraction(getAutoSave) {
     document.querySelectorAll('.custom-touch').forEach(container => {
@@ -39,24 +46,54 @@ export function initInteraction(getAutoSave) {
         };
 
         let getClosestElementsNodeAtXY = (els, x, y) => {
-            let nodes = [];
+            let best = null;
             els.forEach(el => {
-                let path = el.getAttribute('d');
-                let elNodes = path.split(/[MLZ]/).map(s => s.trim()).filter(s => s.length > 0).map(s => {
-                    let [px, py] = s.split(' ').map(Number);
-                    return {x: px, y: py, d: Math.hypot(px - x, py - y), el};
-                });
-                nodes.push(...elNodes);
+                const node = findClosestNode(el, x, y);
+                if (node) {
+                    if (!best || node.d < best.d) best = node;
+                }
             });
-            nodes.sort((a, b) => a.d - b.d);
-            return nodes[0];
+            return best;
         };
 
-        let currentNode = undefined;
         let selectNode = (e) => {
             let {x, y} = getSvgXY(e);
             let closestNode = getClosestElementsNodeAtXY(selectedElements, x, y);
-            currentNode = closestNode;
+            const NODE_THRESHOLD_PX = getRounding() / 2; // pixels
+            // compute zoom to convert pixel threshold to svg units
+            const imgsvgForZoom = document.getElementById('svgimg').querySelector('svg');
+            let svgWidthForZoom = imgsvgForZoom.getAttribute('width');
+            if (!svgWidthForZoom) {
+                const viewBox = imgsvgForZoom.getAttribute('viewBox');
+                if (viewBox) svgWidthForZoom = viewBox.split(' ')[2];
+            }
+            svgWidthForZoom = Number(svgWidthForZoom);
+            const zoomForThreshold = svgWidthForZoom / imgsvgForZoom.clientWidth; // svg units per client px
+            const NODE_THRESHOLD = NODE_THRESHOLD_PX * zoomForThreshold; // in svg units
+
+            if (closestNode && closestNode.d <= NODE_THRESHOLD) {
+                currentNode = closestNode; // endpoint or control
+                return;
+            }
+            // check for segment
+            let bestSeg = null;
+            selectedElements.forEach(el => {
+                const seg = findClosestSegment(el, x, y, NODE_THRESHOLD);
+                if (seg) {
+                    if (!bestSeg || seg.d < bestSeg.d) bestSeg = seg;
+                }
+            });
+            if (bestSeg) {
+                // convert segment to quadratic with control at (x,y)
+                const res = convertSegmentToQuadratic(bestSeg.el, bestSeg.segIndex, x, y);
+                if (res) {
+                    // set currentNode to the new control point
+                    currentNode = {el: bestSeg.el, x: res.cx, y: res.cy, d: 0, cmdIndex: res.cmdIndex, type: 'control'};
+                    redrawCursors();
+                }
+                return;
+            }
+            currentNode = undefined;
         };
 
         let dragNode = (e) => {
@@ -64,18 +101,40 @@ export function initInteraction(getAutoSave) {
                 return;
             }
             let {x, y} = getSvgXY(e);
-            let path = currentNode.el.getAttribute('d');
-            path = path.replace(
-                String(currentNode.x) + ' ' + String(currentNode.y),
-                String(x) + ' ' + String(y)
-            );
-            currentNode.x = x;
-            currentNode.y = y;
-            currentNode.el.setAttribute('d', path);
-            redrawCursors();
+            if (currentNode.type === 'control') {
+                // update control point
+                updateControlPoint(currentNode.el, currentNode.cmdIndex, x, y);
+                currentNode.x = x; currentNode.y = y;
+                redrawCursors();
+                return;
+            }
+            if (currentNode.type === 'endpoint' || currentNode.type === undefined) {
+                // update endpoint
+                updateEndpoint(currentNode.el, currentNode.cmdIndex, x, y);
+                currentNode.x = x; currentNode.y = y;
+                redrawCursors();
+                return;
+            }
+            // fallback: do nothing
         };
 
         let deselectNode = () => {
+            // finalize any pending conversions when finishing a drag
+            if (currentNode && currentNode.el && Number.isInteger(currentNode.cmdIndex)) {
+                try {
+                    finalizeQuadraticIfStraight(currentNode.el, currentNode.cmdIndex);
+                } catch (err) {
+                    console.warn('finalizeQuadraticIfStraight failed', err);
+                }
+                try {
+                    // clean up any duplicated/nearby endpoints created during dragging
+                    normalizePathEndpoints(currentNode.el);
+                } catch (err) {
+                    console.warn('normalizePathEndpoints failed', err);
+                }
+                // refresh overlays
+                try { redrawCursors(); } catch (e) { /* ignore */ }
+            }
             currentNode = undefined;
         };
 
@@ -128,7 +187,16 @@ export function initInteraction(getAutoSave) {
             if (nTaps === 1) {
                 setTimeout(() => {
                     if (nTaps === 1 && !touchId2) {
-                        drawPath(e);
+                        const t = e.target;
+                        // If click/tap occurred on overlay handles, do nothing here (their handlers manage selection/drag)
+                        if (t && t.closest && t.closest('#svgcursors')) {
+                            // no-op
+                        } else if (t && t.closest && t.closest('#svgimg') && t.tagName && t.tagName.toLowerCase() !== 'svg') {
+                            // click on an existing path
+                            selectElement(t);
+                        } else {
+                            drawPath(e);
+                        }
                     }
                     if (nTaps === 2 && !touchId2) {
                         endPath(e);

@@ -109,6 +109,8 @@ window.updateRounding = () => {
 // initialize interaction handlers
 initInteraction(() => autoSave);
 
+// render global handles initially
+
 // initialize gallery (pass collection getter and autoSave)
 updateList = initGallery(() => collection, () => autoSave);
 
