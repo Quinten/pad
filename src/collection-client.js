@@ -1,4 +1,4 @@
-import { connect } from '../collection.js';
+import { connect } from './collection.js';
 
 // Simple collection client wrapper
 export function createCollection(onConnected) {
