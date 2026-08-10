@@ -96,7 +96,16 @@ export function initInteraction(getAutoSave) {
             }
         };
         let endPath = (e) => {
+            let el = e.target;
             if (currentPad !== undefined) {
+                let pathIsValid = currentPad.indexOf('L') !== -1;
+                if (!pathIsValid) {
+                    currentPad = undefined;
+                    let cursorsvg = document.getElementById('svgcursors').querySelector('svg');
+                    cursorsvg.innerHTML = '';
+                    selectElement(el);
+                    return;
+                }
                 let cursorsvg = document.getElementById('svgcursors').querySelector('svg');
                 let imgsvg = document.getElementById('svgimg').querySelector('svg');
                 currentPad += " Z";
@@ -109,7 +118,6 @@ export function initInteraction(getAutoSave) {
                 fillElements(getAutoSave);
                 strokeElements(getAutoSave);
             } else {
-                let el = e.target;
                 selectElement(el);
             }
         };
