@@ -1,0 +1,27 @@
+{
+  "name": "pad",
+  "version": "1.0.0",
+  "description": "mini svg editor",
+  "homepage": "https://github.com/Quinten/pad#readme",
+  "bugs": {
+    "url": "https://github.com/Quinten/pad/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Quinten/pad.git"
+  },
+  "license": "unlicensed",
+  "author": "Quinten",
+  "scripts": {
+    "start": "node srcserver.js",
+    "watch": "parcel watch src/index.html --public-url ./",
+    "build": "parcel build src/index.html --public-url ./ --no-source-maps",
+    "clean": "rm -rf dist/ .parcel-cache/"
+  },
+  "devDependencies": {
+    "@parcel/packager-raw-url": "^2.14.4",
+    "@parcel/transformer-webmanifest": "^2.16.4",
+    "parcel": "^2.14.4",
+    "svgo": "^3.3.2"
+  }
+}
