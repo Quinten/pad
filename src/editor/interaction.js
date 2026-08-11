@@ -374,6 +374,32 @@ export function initInteraction(getAutoSave) {
             stopPanning();
             deselectNode();
         });
+
+        // Pointer events: support direct pointer-based dragging (works for touch/pen/mouse)
+        container.addEventListener('pointermove', e => {
+            // prevent default to avoid browser gestures when touch pointers are used
+            try { e.preventDefault(); } catch (err) { /* ignore */ }
+            if (panStarted) {
+                // emulate mouse panning via pointer screen coords
+                mouseX = e.screenX || e.clientX;
+                mouseY = e.screenY || e.clientY;
+                updatePanning(mouseX, mouseY, e.pointerType === 'touch' ? 1 : 1);
+                return;
+            }
+            if (currentNode) {
+                dragNode(e);
+            }
+        });
+        container.addEventListener('pointerup', e => {
+            try { e.preventDefault(); } catch (err) { /* ignore */ }
+            stopPanning();
+            deselectNode();
+        });
+        container.addEventListener('pointercancel', e => {
+            try { e.preventDefault(); } catch (err) { /* ignore */ }
+            stopPanning();
+            deselectNode();
+        });
         let wheelTO = undefined;
         let wheelScale = 1;
         container.addEventListener('wheel', e => {

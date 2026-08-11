@@ -68,12 +68,17 @@ function createHandlesForElement(el, options = {interactiveEndpoints: false, for
                     ensureSelected(el);
                     beginDragNode({el, x: c.x, y: c.y, cmdIndex: idx, type: 'endpoint'});
                 });
-                ec.addEventListener('touchstart', (ev) => {
-                    ev.preventDefault();
+                const onEndpointPointer = (ev) => {
+                    try { ev.preventDefault(); } catch (err) { /* ignore */ }
                     ev.stopPropagation();
+                    if (ev.pointerId && ev.target && ev.target.setPointerCapture) {
+                        try { ev.target.setPointerCapture(ev.pointerId); } catch (err) { /* ignore */ }
+                    }
                     ensureSelected(el);
                     beginDragNode({el, x: c.x, y: c.y, cmdIndex: idx, type: 'endpoint'});
-                });
+                };
+                ec.addEventListener('touchstart', onEndpointPointer, {passive: false});
+                ec.addEventListener('pointerdown', onEndpointPointer);
             } else {
                 ec.setAttribute('pointer-events', 'none');
             }
@@ -148,6 +153,14 @@ function createHandlesForElement(el, options = {interactiveEndpoints: false, for
                 };
                 bc.addEventListener('mousedown', onBendPointerOffset);
                 bc.addEventListener('touchstart', onBendPointerOffset, {passive: false});
+                bc.addEventListener('pointerdown', (ev) => {
+                    try { ev.preventDefault(); } catch (err) { /* ignore */ }
+                    ev.stopPropagation();
+                    if (ev.pointerId && ev.target && ev.target.setPointerCapture) {
+                        try { ev.target.setPointerCapture(ev.pointerId); } catch (err) { /* ignore */ }
+                    }
+                    onBendPointerOffset(ev);
+                });
             } else {
                 bc.setAttribute('pointer-events', 'all');
                 bc.style.cursor = 'pointer';
@@ -185,6 +198,14 @@ function createHandlesForElement(el, options = {interactiveEndpoints: false, for
                 };
                 bc.addEventListener('mousedown', onBendPointer);
                 bc.addEventListener('touchstart', onBendPointer, {passive: false});
+                bc.addEventListener('pointerdown', (ev) => {
+                    try { ev.preventDefault(); } catch (err) { /* ignore */ }
+                    ev.stopPropagation();
+                    if (ev.pointerId && ev.target && ev.target.setPointerCapture) {
+                        try { ev.target.setPointerCapture(ev.pointerId); } catch (err) { /* ignore */ }
+                    }
+                    onBendPointer(ev);
+                });
                 bc.setAttribute('cx', midX);
                 bc.setAttribute('cy', midY);
             }
@@ -215,12 +236,17 @@ function createHandlesForElement(el, options = {interactiveEndpoints: false, for
                     ensureSelected(el);
                     beginDragNode({el, x: c.cx, y: c.cy, cmdIndex: idx, type: 'control'});
                 });
-                circle.addEventListener('touchstart', (ev) => {
-                    ev.preventDefault();
+                const onControlPointer = (ev) => {
+                    try { ev.preventDefault(); } catch (err) { /* ignore */ }
                     ev.stopPropagation();
+                    if (ev.pointerId && ev.target && ev.target.setPointerCapture) {
+                        try { ev.target.setPointerCapture(ev.pointerId); } catch (err) { /* ignore */ }
+                    }
                     ensureSelected(el);
                     beginDragNode({el, x: c.cx, y: c.cy, cmdIndex: idx, type: 'control'});
-                }, {passive: false});
+                };
+                circle.addEventListener('touchstart', onControlPointer, {passive: false});
+                circle.addEventListener('pointerdown', onControlPointer);
             } else {
                 circle.setAttribute('pointer-events', 'none');
             }
@@ -283,7 +309,8 @@ function createHandlesForElement(el, options = {interactiveEndpoints: false, for
                 bc.setAttribute('cy', midY);
             }
             // attach handler (use zIdx as segIndex so convert handles insertion before Z)
-            bc.addEventListener('mousedown', (ev) => {
+            const onZBendPointer = (ev) => {
+                try { ev.preventDefault(); } catch (err) { /* ignore */ }
                 ev.stopPropagation();
                 ensureSelected(el);
                 const res = convertSegmentToQuadratic(el, zIdx, midX, midY);
@@ -291,17 +318,10 @@ function createHandlesForElement(el, options = {interactiveEndpoints: false, for
                     redrawCursors();
                     beginDragNode({el, x: res.cx, y: res.cy, cmdIndex: res.cmdIndex, type: 'control'});
                 }
-            });
-            bc.addEventListener('touchstart', (ev) => {
-                ev.preventDefault();
-                ev.stopPropagation();
-                ensureSelected(el);
-                const res = convertSegmentToQuadratic(el, zIdx, midX, midY);
-                if (res) {
-                    redrawCursors();
-                    beginDragNode({el, x: res.cx, y: res.cy, cmdIndex: res.cmdIndex, type: 'control'});
-                }
-            }, {passive: false});
+            };
+            bc.addEventListener('mousedown', (ev) => { ev.stopPropagation(); onZBendPointer(ev); });
+            bc.addEventListener('touchstart', onZBendPointer, {passive: false});
+            bc.addEventListener('pointerdown', (ev) => { try { ev.preventDefault(); } catch (err) {} ev.stopPropagation(); if (ev.pointerId && ev.target && ev.target.setPointerCapture) { try { ev.target.setPointerCapture(ev.pointerId); } catch (err) {} } onZBendPointer(ev); });
             bh.appendChild(bc);
             bendHandles.push(bh);
         }
