@@ -69,6 +69,7 @@ function createHandlesForElement(el, options = {interactiveEndpoints: false, for
                     beginDragNode({el, x: c.x, y: c.y, cmdIndex: idx, type: 'endpoint'});
                 });
                 ec.addEventListener('touchstart', (ev) => {
+                    ev.preventDefault();
                     ev.stopPropagation();
                     ensureSelected(el);
                     beginDragNode({el, x: c.x, y: c.y, cmdIndex: idx, type: 'endpoint'});
@@ -116,6 +117,7 @@ function createHandlesForElement(el, options = {interactiveEndpoints: false, for
                 bc.setAttribute('cy', midY + oy);
                 // attach handler using original mid coords for conversion but use event position to avoid stealing near-endpoint drags
                 const onBendPointerOffset = (ev) => {
+                    ev.preventDefault();
                     ev.stopPropagation();
                     // compute svg-space event position
                     const imgsvg = document.getElementById('svgimg').querySelector('svg');
@@ -145,11 +147,12 @@ function createHandlesForElement(el, options = {interactiveEndpoints: false, for
                     }
                 };
                 bc.addEventListener('mousedown', onBendPointerOffset);
-                bc.addEventListener('touchstart', onBendPointerOffset);
+                bc.addEventListener('touchstart', onBendPointerOffset, {passive: false});
             } else {
                 bc.setAttribute('pointer-events', 'all');
                 bc.style.cursor = 'pointer';
                 const onBendPointer = (ev) => {
+                    ev.preventDefault();
                     ev.stopPropagation();
                     // compute svg-space event position
                     const imgsvg = document.getElementById('svgimg').querySelector('svg');
@@ -181,7 +184,7 @@ function createHandlesForElement(el, options = {interactiveEndpoints: false, for
                     }
                 };
                 bc.addEventListener('mousedown', onBendPointer);
-                bc.addEventListener('touchstart', onBendPointer);
+                bc.addEventListener('touchstart', onBendPointer, {passive: false});
                 bc.setAttribute('cx', midX);
                 bc.setAttribute('cy', midY);
             }
@@ -213,10 +216,11 @@ function createHandlesForElement(el, options = {interactiveEndpoints: false, for
                     beginDragNode({el, x: c.cx, y: c.cy, cmdIndex: idx, type: 'control'});
                 });
                 circle.addEventListener('touchstart', (ev) => {
+                    ev.preventDefault();
                     ev.stopPropagation();
                     ensureSelected(el);
                     beginDragNode({el, x: c.cx, y: c.cy, cmdIndex: idx, type: 'control'});
-                });
+                }, {passive: false});
             } else {
                 circle.setAttribute('pointer-events', 'none');
             }
@@ -289,6 +293,7 @@ function createHandlesForElement(el, options = {interactiveEndpoints: false, for
                 }
             });
             bc.addEventListener('touchstart', (ev) => {
+                ev.preventDefault();
                 ev.stopPropagation();
                 ensureSelected(el);
                 const res = convertSegmentToQuadratic(el, zIdx, midX, midY);
@@ -296,7 +301,7 @@ function createHandlesForElement(el, options = {interactiveEndpoints: false, for
                     redrawCursors();
                     beginDragNode({el, x: res.cx, y: res.cy, cmdIndex: res.cmdIndex, type: 'control'});
                 }
-            });
+            }, {passive: false});
             bh.appendChild(bc);
             bendHandles.push(bh);
         }

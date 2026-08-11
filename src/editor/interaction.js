@@ -293,7 +293,7 @@ export function initInteraction(getAutoSave) {
             if (touches.length === 1) {
                 handleTaps(e);  
             }
-        });
+        }, {passive: false});
         container.addEventListener('touchmove', e => {
             e.preventDefault();
             let touches = e.touches;
@@ -313,7 +313,7 @@ export function initInteraction(getAutoSave) {
                 return;
             }
             dragNode(e);
-        });
+        }, {passive: false});
         container.addEventListener('touchend', e => {
             e.preventDefault();
             let touches = e.changedTouches;
@@ -326,7 +326,7 @@ export function initInteraction(getAutoSave) {
                 }
             }
             deselectNode();
-        });
+        }, {passive: false});
 
         // desktop
         let spaceDown = false;
