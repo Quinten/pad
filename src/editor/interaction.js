@@ -187,16 +187,7 @@ export function initInteraction(getAutoSave) {
             if (nTaps === 1) {
                 setTimeout(() => {
                     if (nTaps === 1 && !touchId2) {
-                        const t = e.target;
-                        // If click/tap occurred on overlay handles, do nothing here (their handlers manage selection/drag)
-                        if (t && t.closest && t.closest('#svgcursors')) {
-                            // no-op
-                        } else if (t && t.closest && t.closest('#svgimg') && t.tagName && t.tagName.toLowerCase() !== 'svg') {
-                            // click on an existing path
-                            selectElement(t);
-                        } else {
-                            drawPath(e);
-                        }
+                        drawPath(e);
                     }
                     if (nTaps === 2 && !touchId2) {
                         endPath(e);
@@ -270,65 +261,14 @@ export function initInteraction(getAutoSave) {
             }
         };
 
-        // touch
+        // touch/mouse handling (prefer Pointer Events when available)
 
         let touchId1 = undefined;
         let touchId2 = undefined;
         let touch1 = undefined;
         let touch2 = undefined;
 
-        container.addEventListener('touchstart', e => {
-            e.preventDefault();
-            let touches = e.touches;
-            if (touches.length > 1 && touchId1 === undefined && touchId2 === undefined) {
-                touchId1 = touches[0].identifier;
-                touchId2 = touches[1].identifier;
-                touch1 = touches[0];
-                touch2 = touches[1];
-                let x = touch1.screenX + (touch2.screenX - touch1.screenX) / 2;
-                let y = touch1.screenY + (touch2.screenY - touch1.screenY) / 2;
-                let scale = Math.hypot(touch2.screenX - touch1.screenX, touch2.screenY - touch1.screenY);
-                startPanning(x, y, scale);
-            }
-            if (touches.length === 1) {
-                handleTaps(e);  
-            }
-        }, {passive: false});
-        container.addEventListener('touchmove', e => {
-            e.preventDefault();
-            let touches = e.touches;
-            if (touches.length > 1 && touchId1 !== undefined && touchId2 !== undefined) {
-                for (let i = 0; i < touches.length; i++) {
-                    let touch = touches[i];
-                    if (touch.identifier === touchId1) {
-                        touch1 = touch;
-                    } else if (touch.identifier === touchId2) {
-                        touch2 = touch;
-                    }
-                }
-                let x = touch1.screenX + (touch2.screenX - touch1.screenX) / 2;
-                let y = touch1.screenY + (touch2.screenY - touch1.screenY) / 2;
-                let scale = Math.hypot(touch2.screenX - touch1.screenX, touch2.screenY - touch1.screenY);
-                updatePanning(x, y, scale);
-                return;
-            }
-            dragNode(e);
-        }, {passive: false});
-        container.addEventListener('touchend', e => {
-            e.preventDefault();
-            let touches = e.changedTouches;
-            for (let i = 0; i < touches.length; i++) {
-                let touch = touches[i];
-                if (touch.identifier === touchId1 || touch.identifier === touchId2) {
-                    touchId1 = undefined;
-                    touchId2 = undefined;
-                    stopPanning();
-                }
-            }
-            deselectNode();
-        }, {passive: false});
-
-        // desktop
+        // keyboard state
         let spaceDown = false;
         let mouseX = window.innerWidth / 2;
         let mouseY = window.innerHeight / 2;
@@ -344,36 +284,103 @@ export function initInteraction(getAutoSave) {
                 stopPanning();
             }
         });
-        container.addEventListener('mousedown', e => {
-            e.preventDefault();
-            if (spaceDown) {
-                let x = e.screenX;
-                let y = e.screenY;
-                startPanning(x, y, 1);
-            } else {
-                handleTaps(e);
-            }
-        });
-        container.addEventListener('mousemove', e => {
-            e.preventDefault();
-            if (panStarted) {
-                mouseX = e.screenX;
-                mouseY = e.screenY;
-                updatePanning(mouseX, mouseY, 1);
-                return;
-            }
-            if (currentNode) {
+
+        if (window.PointerEvent) {
+            container.addEventListener('pointerdown', e => {
+                try { e.preventDefault(); } catch (err) { /* ignore */ }
+                if (spaceDown) {
+                    let x = e.screenX || e.clientX;
+                    let y = e.screenY || e.clientY;
+                    startPanning(x, y, 1);
+                    return;
+                } else {
+                    handleTaps(e);
+                }
+            });
+            // pointermove/pointerup are handled by the pointer handlers below
+        } else {
+            container.addEventListener('touchstart', e => {
+                e.preventDefault();
+                let touches = e.touches;
+                if (touches.length > 1 && touchId1 === undefined && touchId2 === undefined) {
+                    touchId1 = touches[0].identifier;
+                    touchId2 = touches[1].identifier;
+                    touch1 = touches[0];
+                    touch2 = touches[1];
+                    let x = touch1.screenX + (touch2.screenX - touch1.screenX) / 2;
+                    let y = touch1.screenY + (touch2.screenY - touch1.screenY) / 2;
+                    let scale = Math.hypot(touch2.screenX - touch1.screenX, touch2.screenY - touch1.screenY);
+                    startPanning(x, y, scale);
+                }
+                if (touches.length === 1) {
+                    handleTaps(e);
+                }
+            }, {passive: false});
+            container.addEventListener('touchmove', e => {
+                e.preventDefault();
+                let touches = e.touches;
+                if (touches.length > 1 && touchId1 !== undefined && touchId2 !== undefined) {
+                    for (let i = 0; i < touches.length; i++) {
+                        let touch = touches[i];
+                        if (touch.identifier === touchId1) {
+                            touch1 = touch;
+                        } else if (touch.identifier === touchId2) {
+                            touch2 = touch;
+                        }
+                    }
+                    let x = touch1.screenX + (touch2.screenX - touch1.screenX) / 2;
+                    let y = touch1.screenY + (touch2.screenY - touch1.screenY) / 2;
+                    let scale = Math.hypot(touch2.screenX - touch1.screenX, touch2.screenY - touch1.screenY);
+                    updatePanning(x, y, scale);
+                    return;
+                }
                 dragNode(e);
-            }
-        });
-        container.addEventListener('mouseup', e => {
-            stopPanning();
-            deselectNode();
-        });
-        container.addEventListener('mouseleave', e => {
-            stopPanning();
-            deselectNode();
-        });
+            }, {passive: false});
+            container.addEventListener('touchend', e => {
+                e.preventDefault();
+                let touches = e.changedTouches;
+                for (let i = 0; i < touches.length; i++) {
+                    let touch = touches[i];
+                    if (touch.identifier === touchId1 || touch.identifier === touchId2) {
+                        touchId1 = undefined;
+                        touchId2 = undefined;
+                        stopPanning();
+                    }
+                }
+                deselectNode();
+            }, {passive: false});
+
+            container.addEventListener('mousedown', e => {
+                e.preventDefault();
+                if (spaceDown) {
+                    let x = e.screenX;
+                    let y = e.screenY;
+                    startPanning(x, y, 1);
+                } else {
+                    handleTaps(e);
+                }
+            });
+            container.addEventListener('mousemove', e => {
+                e.preventDefault();
+                if (panStarted) {
+                    mouseX = e.screenX;
+                    mouseY = e.screenY;
+                    updatePanning(mouseX, mouseY, 1);
+                    return;
+                }
+                if (currentNode) {
+                    dragNode(e);
+                }
+            });
+            container.addEventListener('mouseup', e => {
+                stopPanning();
+                deselectNode();
+            });
+            container.addEventListener('mouseleave', e => {
+                stopPanning();
+                deselectNode();
+            });
+        }
 
         // Pointer events: support direct pointer-based dragging (works for touch/pen/mouse)
         container.addEventListener('pointermove', e => {
