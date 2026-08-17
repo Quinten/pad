@@ -285,7 +285,7 @@ export function initInteraction(getAutoSave) {
             }
         });
 
-        if (window.PointerEvent) {
+        if (window.PointerEvent && (navigator.maxTouchPoints === undefined || navigator.maxTouchPoints <= 1)) {
             container.addEventListener('pointerdown', e => {
                 try { e.preventDefault(); } catch (err) { /* ignore */ }
                 if (spaceDown) {
